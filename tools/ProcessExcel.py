@@ -19,24 +19,26 @@ username = 'zhiwei.yin@yingheying.com'
 #邮箱密码
 password='!QAZ!QAZ1qaz'
 #发送显示的用户名称，邮箱需要与登录邮箱一致
-mailFrom='wisdom <zhiwei.yin@yingheying.com>'/
+mailFrom='wisdom <zhiwei.yin@yingheying.com>'
 sender='zhiwei.yin@yingheying.com'
 
 #邮件主题
-gEmailSubject = "请添加标题"
+gEmailSubject = "9月份考勤数据"
 #邮件正文内容
-gEmailBodyHeader = "你好，请添加正文！\n\n"
+gEmailBodyHeader = "您好，以下是您9月份的考勤数据！\n\n"
 
 #文件所在目录与文件名
 #文件所在文件夹
 gDirectory = "D:/python/tools/excelFile/"
 #文件名
-gFileName = "testdata.xls"
+gFileName = "tttt.xls"
+#员工工号与邮箱的对应数据
+gEmployDataFile = "employdata.xlsx"
 #处理完后显示的文件名
 gProcessedFileName = "processed.xls"
 
 #本月的工作日1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31
-gDutyTup = (1,4,5,6,7,8,11,12,13,14,15,19,20,21,22,25,26,27,28,29,30)
+gDutyTup = (3,4,5,6,7,10,11,12,13,14,17,18,19,20,21,25,26,27,28)
 ################################################################################################
 
 #邮箱服务器与登录账号
@@ -47,7 +49,21 @@ gProcessFile = ''
 
 #yunhui.mou@yingheying.com, "2":"zhiwei.yin@yingheying.com", "3":"zhiwei.yin@yingheying.com"
 #"2":"yunhui.mou@yingheying.com", "3":"yunhui.mou@yingheying.com"
-gDictEmial = {"1":"zhiwei.yin@yingheying.com", "2":"zhiwei.yin@yingheying.com","3":"zhiwei.yin@yingheying.com"}
+gDictEmial = {"1258":"zhiwei.yin@yingheying.com"}
+
+def GetEmployData():
+    print "GetEmployData Begins:"
+    global gDictEmial
+    # open file
+    filePath = gDirectory + gEmployDataFile
+    workbook = xlrd.open_workbook(filePath)
+    sheet = workbook.sheet_by_index(0)
+
+    for row in range(1, sheet.nrows):
+        employNo = str(int(sheet.cell_value(row, 1)))
+        employEmail = sheet.cell_value(row, 2)
+        gDictEmial[employNo] = employEmail.encode('utf8')
+    print "GetEmployData Ends, ", sheet.nrows-1
 
 
 def loginInMail(user, psw):
@@ -271,6 +287,7 @@ def ProcessExcelFile():
 def main():
     global gErrorFile
     print("Begin Process excel:")
+    GetEmployData()
     errorFilePath = gDirectory + "errormsg.txt"
     gErrorFile = open(errorFilePath, 'w')
     loginInMail(username, password)

@@ -1,104 +1,74 @@
 # -*- coding: utf-8 -*-
-import xlrd
-import os,time
-import smtplib
-from email.mime.text import MIMEText
-from email.header import Header
-import base64
-#处理从excel中读取的float类型数据的类
-#目前集成两种处理：（1）float到int型的转换（2）float到str型的转换，后续有需要可以增加方法以集成其他类型的转换
-class judgeFloat:
-    def floatToInt(self, variable):
-        variable="%d"%variable
-        return variable
-    def floatToStr(self, variable):
-        variable=xlrd.xldate_as_tuple(variable, 0)
-        variable=list(variable)
-        if variable[1] < 10:
-            variable[1] = '0'+str(variable[1])
-            variable=str(variable[0])+str(variable[1])+str(variable[2])
-        return variable
+import easygui as g
+#邮箱登录名
+username = 'zhiwei.yin@yingheying.com'
+#邮箱密码
+password='!QAZ!QAZ1qaz'
+#发送显示的用户名称，邮箱需要与登录邮箱一致
+mailFrom='wisdom <zhiwei.yin@yingheying.com>'
+sender='zhiwei.yin@yingheying.com'
 
+#邮件主题
+gEmailSubject = "9月份考勤数据"
+#邮件正文内容
+gEmailBodyHeader = "您好，以下是您9月份的考勤数据！\n\n"
 
-#写邮件的函数
-def mailWrite(filename,address):
-    header='<html><head><meta http-equiv="Content-Type" content="text/html; charset=utf-8" /></head>'
-    th='<body text="#000000">committed缺陷详情：<table border="1" cellspacing="0" cellpadding="3" bordercolor="#000000" width="1800" align="left" ><tr bgcolor="#F79646" align="left" ><th>标识</th><th>摘要</th><th>状态</th><th>优先级</th><th>严重性</th><th>标记</th><th>所有者</th><th>创建时间</th><th>修改时间</th></tr>'
-    #打开文件
-    filepath = address+filename
-    book=xlrd.open_workbook(filepath)
-    sheet=book.sheet_by_ind ex(0)
-    #获取行列的数目，并以此为范围遍历获取单元数据
-    nrows = sheet.nrows-1
-    ncols = sheet.ncols
-    body=''
-    cellData=1
-    for i in range(1,nrows+1):
-        td=''
-        for j in range(ncols):
-    #读取单元格数据，赋给cellData变量供写入HTML表格中
-            cellData=sheet.cell_value(i,j)
-    #调用浮点型转换方法解决读取的日期内容为浮点型数据的问题
-            if isinstance(cellData,float):
-                if j==0 and i>0:
-                    cellDataNew=judgeFloat()
-                    cellData=cellDataNew.floatToInt(cellData)
-                else:
-                    cellDataNew=judgeFloat()
-                    cellData=cellDataNew.floatToStr(cellData)
-            else:
-                pass
-            tip='<td>'+cellData+'</td>'
-        #并入tr标签
-        td=td+tip
-    tr='<tr>'+td+'</tr>'
-    #为解决字符串拼接问题增设语句，tr从excel中读取出来是unicode编码，转换成UTF-8编码即可拼接
-    tr=tr.encode('utf-8')
-    #并入body标签
-    body=body+tr
-    tail='</table></body></html>'
-    #将内容拼接成完整的HTML文档
-    mail=header+th+body+tail
-    return mail
+#文件所在目录与文件名
+#文件所在文件夹
+gDirectory = "D:/python/tools/excelFile/"
+#文件名
+gFileName = "tttt.xls"
+#员工工号与邮箱的对应数据
+gEmployDataFile = "employdata.xlsx"
+#处理完后显示的文件名
+gProcessedFileName = "processed.xls"
 
+#本月的工作日1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20,21,22,23,24,25,26,27,28,29,30,31
+gDutyTup = [32,33]
 
-    #发送邮件
-def mailSend(mail):
-    #设置发件人
-    sender = '***'
-    #设置接收人
-    receiver = '***@***.com'
-    #设置邮件主题
-    subject = '测试邮件，请忽略！'
-    #设置发件服务器，即smtp服务器
-    smtpserver = 'smtp.***.net'
-    #设置登陆名称
-    username = '***@***.net'
-    #设置登陆密码
-    password = '******'
-    #实例化写邮件到正文区，邮件正文区需要以HTML文档形式写入
-    msg = MIMEText(mail,'html','utf-8')
-    #输入主题
-    msg['Subject'] = subject
-    #调用邮件发送方法，需配合导入邮件相关模块
-    smtp = smtplib.SMTP()
-    #设置连接发件服务器
-    smtp.connect('smtp.***.net')
-    #输入用户名，密码，登陆服务器
-    smtp.login(username, password)
-    #发送邮件
-    smtp.sendmail(sender, receiver, msg.as_string())
-    #退出登陆并关闭与发件服务器的连接
-    smtp.quit()
-    #入口函数，配置文件地址和文件名
+def Login():
+    psd = g.passwordbox(msg='请直接输入密码登录：', title='Logining')
+    if psd.upper()== 'WISDOM':
+        return True
+    else:
+        return False
+
+def InitDialog():
+    global username, password, mailFrom, gEmailSubject, gEmailBodyHeader, gDirectory, gFileName, gEmployDataFile, gProcessedFileName, gDutyTup
+    strStr = ('邮件主题:', '邮件正文:', '文件所在目录: 例如：D:/files/', '工号邮箱对照表文件名:', '考勤文件名:', '保存文件:', '使用的发送邮箱:', '发送邮箱的密码:', '发送邮件的昵称:', '本月非工作日日期:')
+    defualtValue = ('上月考勤数据', '您好，以下是您上月考勤数据!', 'D:/python/tools/excelFile/', 'employdata.xlsx', 'tttt.xls', 'processed.xls', 'zhiwei.yin@yingheying.com', '!QAZ!QAZ1qaz','wisdom', '3,4,5,6,7')
+    if Login():
+        (gEmailSubject, gEmailBodyHeader, gDirectory, gEmployDataFile, gFileName, gProcessedFileName, username, \
+            password, mailFrom, dutyStr) = g.multenterbox('考勤系统\n以下参数均有默认值，且均为必填项\n*文件目录与文件名不支持中文', '泉眼科技', strStr, defualtValue)
+        if gEmailSubject.strip() == '' or gEmailBodyHeader.strip() == '' or gDirectory.strip() == ''\
+                or gFileName.strip() == '' or gEmployDataFile.strip() == '' or gProcessedFileName.strip() == '' \
+                or username.strip() == '' or password.strip() == '' or mailFrom.strip() == '' or dutyStr.strip() == '':
+            print "All entry can not be empty"
+            return False
+        else:
+            gEmailSubject = gEmailSubject.encode(encoding='UTF-8')
+            gEmailBodyHeader = gEmailBodyHeader.encode(encoding='UTF-8')
+            gDirectory = gDirectory.encode(encoding='UTF-8')
+            gEmployDataFile = gEmployDataFile.encode(encoding='UTF-8')
+            gFileName = gFileName.encode(encoding='UTF-8')
+            gProcessedFileName = gProcessedFileName.encode(encoding='UTF-8')
+            username = username.encode(encoding='UTF-8')
+            password = password.encode(encoding='UTF-8')
+            mailFrom = mailFrom.encode(encoding='UTF-8')
+            dutyStr = dutyStr.encode(encoding='UTF-8')
+            mailFrom += ' <' + username + '>'
+            for day in dutyStr.split(","):
+                gDutyTup.append(int(day))
+
+            print gDutyTup
+            return True
+    return False
 
 def main():
-    filename='Sheet1.xlsx'
-    address='d:/defectManage/'
-    #openFile(filename,address)
-    mail=mailWrite(filename,address)
-    mailSend(mail)
-
+    print "main func begins:";
+    InitDialog()
+    print '邮件主题:', gEmailSubject, '邮件正文:', gEmailBodyHeader, '文件所在目录:', gDirectory, '工号邮箱对照表文件名:', gEmployDataFile,\
+        '考勤文件名:',gFileName, '保存文件:',gProcessedFileName, '使用的发送邮箱:', username, '发送邮箱的密码:', password, '发送邮件的昵称:', mailFrom, '本月非工作日日期:', gDutyTup
 
 #调用执行main函数
 if __name__=="__main__":
